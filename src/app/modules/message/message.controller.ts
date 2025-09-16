@@ -30,7 +30,21 @@ const getMyMessages = catchAsync(async (req: Request, res: Response) => {
     data: result,
   });
 });
+
+const getFeedMessages = catchAsync(async (req: Request, res: Response) => {
+  const user = req.user;
+  const paginationOptions = pick(req.query, paginationFields);
+  const result = await MessageServices.getFeedMessages(user!, paginationOptions);
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: 'Messages fetched successfully',
+    data: result,
+  });
+});
+
 export const MessageController = {
   sendMessageToRandomUserOptimized,
-  getMyMessages
+  getMyMessages,
+  getFeedMessages
 };

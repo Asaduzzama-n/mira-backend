@@ -35,4 +35,13 @@ router.delete(
   CommentController.removeComment
 );
 
+router.post(
+  '/:commentId/react',
+  auth(
+    USER_ROLES.USER
+  ),
+  validateRequest(CommentValidations.react),
+  CommentController.reactForComment
+);
+
 export const CommentRoutes = router;

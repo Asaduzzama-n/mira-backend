@@ -35,15 +35,26 @@ const getCommentByMessage = catchAsync(async (req: Request, res: Response) => {
 });
 const removeComment = catchAsync(async (req: Request, res: Response) => {
   const { commentId } = req.params;
-  await CommentServices.removeComment(new Types.ObjectId(commentId));
+  await CommentServices.removeComment(req.user!,new Types.ObjectId(commentId));
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     success: true,
     message: 'Comment removed successfully',
   });
 });
+
+const reactForComment = catchAsync(async (req: Request, res: Response) => {
+  const { commentId } = req.params;
+  await CommentServices.reactForComment( new Types.ObjectId(commentId),req.user!,);
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: 'Comment reacted successfully',
+  });
+});
 export const CommentController = {
   createComment,
   getCommentByMessage,
   removeComment,
+  reactForComment,
 };

@@ -36,4 +36,13 @@ export const CommentValidations = {
       }),
     }),
   }),
+  react:z.object({
+    params:z.object({
+      commentId:z.string({
+        required_error:'Comment id is required',
+      }).refine((value)=>Types.ObjectId.isValid(value),{
+        message:'Invalid comment id',
+      }),
+    }),
+  }),
 };

@@ -114,8 +114,38 @@ const getMessageByUserId = async (userId: string, pagination: IPaginationOptions
   };
 }
 
+const getFeedMessages = async (user: JwtPayload, pagination: IPaginationOptions) => {
+  const { page, limit,skip, sortBy, sortOrder } = paginationHelper.calculatePagination(pagination);
+  const [messages, total] = await Promise.all([
+    Message.find({
+        isShared:true,
+        deletedBy: { $size: 0 }
+    }).populate<{sender:Partial<IUser>}>({
+      path:'sender',
+      select:'firstName lastName profile'
+    }).populate<{receiver:Partial<IUser>}>({
+      path:'receiver',
+      select:'firstName lastName profile'
+    }).sort({[sortBy]: sortOrder}).skip(skip).limit(limit).lean(),
+    Message.countDocuments({
+      isShared:true,
+      deletedBy: { $size: 0 }
+    })
+  ])
+  return {
+    meta: {
+      page,
+      limit,
+      total,
+      totalPage: Math.ceil(total / limit),
+    },
+    data:messages || []
+  };
+}
+
 export const MessageServices = {
   sendMessageToRandomUserOptimized,
   getMyMessages,
-  getMessageByUserId
+  getMessageByUserId,
+  getFeedMessages,
 }

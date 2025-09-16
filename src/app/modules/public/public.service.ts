@@ -5,6 +5,7 @@ import { Faq, Public } from './public.model'
 
 import { User } from '../user/user.model'
 import { emailHelper } from '../../../helpers/emailHelper'
+import { USER_ROLES } from '../../../enum/user'
 
 
 
@@ -52,7 +53,7 @@ const deletePublic = async (id: string) => {
 const createContact = async (payload: IContact) => {
   try {
     // Find admin user to send notification
-    const admin = await User.findOne({ role: 'admin' })
+    const admin = await User.findOne({ role: USER_ROLES.ADMIN })
 
     if (!admin || !admin.email) {
       throw new ApiError(

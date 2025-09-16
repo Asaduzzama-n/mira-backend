@@ -10,7 +10,7 @@ export interface IComment {
   message: Types.ObjectId;
   user: Types.ObjectId;
   content: string;
-  reactionCount: number;
+  reactions: Types.ObjectId[];
   isDeleted: boolean;
   createdAt: Date;
   updatedAt: Date;

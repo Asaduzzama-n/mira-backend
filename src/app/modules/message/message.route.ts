@@ -25,4 +25,11 @@ router.get(
   MessageController.getMyMessages
 )
 
+router.get(
+  '/feed',
+  auth(
+    USER_ROLES.USER
+  ),
+  MessageController.getFeedMessages
+)
 export const MessageRoutes = router;

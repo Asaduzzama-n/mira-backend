@@ -6,7 +6,7 @@ const commentSchema = new Schema<IComment, CommentModel>({
   user: { type: Schema.Types.ObjectId, ref: 'User' },
   content: { type: String },
   isDeleted: { type: Boolean },
-  reactionCount: { type: Number },
+  reactions: { type: [Schema.Types.ObjectId], ref: 'User' },
   createdAt: { type: Date },
   updatedAt: { type: Date },
 }, {
