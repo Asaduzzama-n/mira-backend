@@ -10,6 +10,7 @@ import { logger } from '../../../shared/logger'
 import { IPaginationOptions } from '../../../interfaces/pagination'
 import { paginationHelper } from '../../../helpers/paginationHelper'
 import { userSearchableFields } from './user.constants'
+import { IGenericResponse } from '../../../interfaces/response'
 
 
 
@@ -79,7 +80,7 @@ const getProfile = async(user:JwtPayload)=>{
 }
 
 
-const getAllUsers =async(user:JwtPayload, pagination:IPaginationOptions, filter:IUserFilterableFields)=>{
+const getAllUsers =async(user:JwtPayload, pagination:IPaginationOptions, filter:IUserFilterableFields):Promise<IGenericResponse<IUser[]>>=>{
   const {searchTerm, ...filterData}=filter;
   const {page, limit,skip, sortBy, sortOrder}=paginationHelper.calculatePagination(pagination);
   const andConditions=[];
@@ -115,7 +116,7 @@ const getAllUsers =async(user:JwtPayload, pagination:IPaginationOptions, filter:
       page,
       limit,
       total,
-      pages:Math.ceil(total/limit)
+      totalPage:Math.ceil(total/limit)
     },
     data:result
   }

@@ -9,10 +9,11 @@ import { IAuthResponse } from './auth.interface'
 import { IUser } from '../user/user.interface'
 import { emailTemplate } from '../../../shared/emailTemplate'
 import { emailHelper } from '../../../helpers/emailHelper'
+import config from '../../../config'
 
 
 const handleLoginLogic = async (payload: ILoginData, isUserExist: IUser):Promise<IAuthResponse> => {
-  const { authentication, verified, status, password } = isUserExist
+  const { authentication, verified, status,email, password } = isUserExist
 
   const { restrictionLeftAt, wrongLoginAttempts } = authentication
 
@@ -40,7 +41,7 @@ const handleLoginLogic = async (payload: ILoginData, isUserExist: IUser):Promise
     const otpExpiresIn = new Date(Date.now() + 5 * 60 * 1000)
 
     const authentication = {
-      email: payload.email,
+      email: email,
       oneTimeCode: otp,
       expiresAt: otpExpiresIn,
       latestRequestAt: new Date(),
@@ -61,7 +62,7 @@ const handleLoginLogic = async (payload: ILoginData, isUserExist: IUser):Promise
 
     emailHelper.sendEmail(otpTemplate)
 
-    return authResponse(StatusCodes.PROXY_AUTHENTICATION_REQUIRED, `An OTP has been sent to your ${payload.email}. Please verify.`)
+    return authResponse(StatusCodes.PROXY_AUTHENTICATION_REQUIRED, `${config.node_env === 'development' ? `${email}, ${otp}` : "An otp has been sent to your email, please check."}`)
 
   }
 

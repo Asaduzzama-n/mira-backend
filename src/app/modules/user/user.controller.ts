@@ -12,9 +12,10 @@ import { paginationFields } from '../../../interfaces/pagination'
 
 
 const updateProfile = catchAsync(async (req: Request, res: Response) => {
-  const { image, ...userData } = req.body
+  const { images, ...userData } = req.body
 
-  userData.profile = image[0]
+  images?.length > 0 && (userData.profile = images[0])
+
   const result = await UserServices.updateProfile(req.user!, userData)
   sendResponse<String>(res, {
     statusCode: StatusCodes.OK,

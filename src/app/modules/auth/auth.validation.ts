@@ -48,9 +48,8 @@ const resetPasswordZodSchema = z.object({
 
 const loginZodSchema = z.object({
   body: z.object({
-    email: z
+    userName: z
       .string()
-      .optional()
       .refine(value => !value || /^\S+@\S+\.\S+$/.test(value), {
         message: 'Invalid email format',
       }),
@@ -61,7 +60,7 @@ const loginZodSchema = z.object({
         message: 'Invalid phone number format',
       }),
     deviceToken: z.string().min(1).optional(),
-    password: z.string().min(8, { message: 'Password is required' }),
+    password: z.string().min(6, { message: 'Password is required' }),
   }),
 })
 

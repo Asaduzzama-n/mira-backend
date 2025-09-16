@@ -5,7 +5,8 @@ export type IVerifyEmail = {
 
 export type ILoginData = {
   password: string
-  email?: string
+  userName?: string
+  email?:string
   phone?: string
   deviceToken?: string
 }

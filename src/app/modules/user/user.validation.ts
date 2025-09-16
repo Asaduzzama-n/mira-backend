@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { USER_ROLES } from '../../../enum/user'
-import { profile } from 'console'
+
 
 const createUserZodSchema = z.object({
   body: z.object({
@@ -23,10 +23,9 @@ const createUserZodSchema = z.object({
 
 const updateUserZodSchema = z.object({
   body: z.object({
-    name: z.string().optional(),
-    phone: z.string().optional(),
-    address: z.string().optional(),
-    image: z.array(z.string()).optional(),
+    firstName: z.string().optional(),
+    lastName: z.string().optional(),
+    images: z.array(z.string()).optional(),
   }),
 })
 
