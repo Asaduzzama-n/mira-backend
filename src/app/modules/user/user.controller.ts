@@ -27,7 +27,7 @@ const updateProfile = catchAsync(async (req: Request, res: Response) => {
 
 
 const checkAndGetUserNameAvailablity = catchAsync(async (req: Request, res: Response) => {
-  const { userName } = req.body
+  const { userName } = req.params
   const result = await UserServices.checkAndGetUserNameAvailablity(userName)
   sendResponse(res, {
     statusCode: StatusCodes.OK,

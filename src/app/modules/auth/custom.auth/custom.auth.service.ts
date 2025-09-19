@@ -20,10 +20,13 @@ import { emailHelper } from '../../../../helpers/emailHelper'
 
 const createUser = async (payload: IUser) => {
   payload.email = payload.email?.toLowerCase().trim()
+  
   const isUserExist = await User.findOne({
     email: payload.email,
     status: { $nin: [USER_STATUS.DELETED] },
   })
+
+  
 
   if (isUserExist) {
     throw new ApiError(
@@ -31,6 +34,8 @@ const createUser = async (payload: IUser) => {
       `An account with this email already exist, please login or try with another email.`,
     )
   }
+
+
 
   const otp = generateOtp()
   const otpExpiresIn = new Date(Date.now() + 5 * 60 * 1000)
@@ -65,7 +70,7 @@ const createUser = async (payload: IUser) => {
   }
   emailHelper.sendEmail(createAccount)
 
- return `${config.node_env === 'development' ? `${payload.email}, ${otp}` : "An otp has been sent to your email, please check."}`;
+ return `${config.node_env === 'development' ? `${user.userName}, ${otp}` : "An otp has been sent to your email, please check."}`;
 
 }
 
@@ -190,7 +195,7 @@ const forgetPassword = async (email?: string, phone?: string) => {
     emailHelper.sendEmail(forgetPasswordEmailTemplate)
   }
 
-  return `${config.node_env === 'development' ? `${isUserExist.email}, ${otp}` : "An otp has been sent to your email, please check."}`
+  return `${config.node_env === 'development' ? `${isUserExist.userName}, ${otp}` : "An otp has been sent to your email, please check."}`
 }
 
 const resetPassword = async (resetToken: string, payload: IResetPassword) => {
@@ -447,7 +452,7 @@ const resendOtpToPhoneOrEmail = async (
     )
   }
 
-  return `${config.node_env === 'development' ? `${isUserExist.email}, ${otp}` : "An otp has been sent to your email, please check."}`
+  return `${config.node_env === 'development' ? `${isUserExist.userName}, ${otp}` : "An otp has been sent to your email, please check."}`
 }
 
 const deleteAccount = async (user: JwtPayload, password:string) => {

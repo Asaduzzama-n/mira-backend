@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { USER_ROLES } from '../../../enum/user'
+import { query } from 'express'
 
 
 const createUserZodSchema = z.object({
@@ -30,7 +31,7 @@ const updateUserZodSchema = z.object({
 })
 
 const checkUserNameZodSchema = z.object({
-  body: z.object({
+  params: z.object({
     userName: z.string({ required_error: 'User Name is required' }).min(2),
   }),
 })

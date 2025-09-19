@@ -13,44 +13,77 @@ import config from '../../../config'
 
 
 const handleLoginLogic = async (payload: ILoginData, isUserExist: IUser):Promise<IAuthResponse> => {
-  const { authentication, verified, status,email, password } = isUserExist
-
+  const { authentication, verified, status, email, password } = isUserExist
   const { restrictionLeftAt, wrongLoginAttempts } = authentication
 
+  // Validate user status
+  if (status === USER_STATUS.DELETED) {
+    throw new ApiError(
+      StatusCodes.UNAUTHORIZED,
+      'Invalid credentials',
+    )
+  }
+
+  // Check if account is currently restricted
+  if (status === USER_STATUS.RESTRICTED && restrictionLeftAt && new Date() < restrictionLeftAt) {
+    const remainingMinutes = Math.ceil(
+      (restrictionLeftAt.getTime() - Date.now()) / 60000,
+    )
+    throw new ApiError(
+      StatusCodes.TOO_MANY_REQUESTS,
+      `Account temporarily locked. Try again in ${remainingMinutes} minutes`,
+    )
+  }
+
+  // Verify password
   const isPasswordMatched = await User.isPasswordMatched(
     payload.password,
     password,
   )
-  const fullName = isUserExist?.lastName ? `${isUserExist.firstName} ${isUserExist.lastName}` : isUserExist.firstName 
+  const fullName = getFullName(isUserExist.firstName, isUserExist.lastName)
 
   if (!isPasswordMatched) {
-    isUserExist.authentication.wrongLoginAttempts = wrongLoginAttempts + 1
-
-    if (isUserExist.authentication.wrongLoginAttempts >= 5) {
-      isUserExist.status = USER_STATUS.RESTRICTED
-      isUserExist.authentication.restrictionLeftAt = new Date(
-        Date.now() + 10 * 60 * 1000,
-      ) // restriction for 10 minutes
+    const newWrongAttempts = wrongLoginAttempts + 1
+    const updateData: any = {
+      'authentication.wrongLoginAttempts': newWrongAttempts,
+      'authentication.latestRequestAt': new Date()
     }
 
+    // Apply progressive restrictions
+    if (newWrongAttempts >= 5) {
+      updateData.status = USER_STATUS.RESTRICTED
+      updateData['authentication.restrictionLeftAt'] = new Date(
+        Date.now() + 30 * 60 * 1000, // 30 minutes restriction
+      )
+    }
 
+    // Persist failed login attempt
+    await User.findByIdAndUpdate(isUserExist._id, { $set: updateData })
+
+    throw new ApiError(
+      StatusCodes.UNAUTHORIZED,
+      'Invalid credentials',
+    )
+  }
+
+
+  // Handle unverified accounts
   if (!verified) {
-    //send otp to user
-    
     const otp = generateOtp()
     const otpExpiresIn = new Date(Date.now() + 5 * 60 * 1000)
 
-    const authentication = {
+    const authenticationUpdate = {
       email: email,
       oneTimeCode: otp,
       expiresAt: otpExpiresIn,
       latestRequestAt: new Date(),
       authType: 'createAccount',
+      wrongLoginAttempts: 0, // Reset on successful password verification
     }
 
     await User.findByIdAndUpdate(isUserExist._id, {
       $set: {
-        authentication,
+        authentication: authenticationUpdate,
       },
     })
 
@@ -60,73 +93,47 @@ const handleLoginLogic = async (payload: ILoginData, isUserExist: IUser):Promise
       otp,
     })
 
-    emailHelper.sendEmail(otpTemplate)
+    // Send email asynchronously to avoid blocking
+    emailHelper.sendEmail(otpTemplate).catch(error => {
+      console.error('Failed to send verification email:', error)
+    })
 
-    return authResponse(StatusCodes.PROXY_AUTHENTICATION_REQUIRED, `${config.node_env === 'development' ? `${email}, ${otp}` : "An otp has been sent to your email, please check."}`)
-
-  }
-
-  if (status === USER_STATUS.DELETED) {
-    throw new ApiError(
-      StatusCodes.BAD_REQUEST,
-      'No account found with this email',
+    return authResponse(
+      StatusCodes.PROXY_AUTHENTICATION_REQUIRED, 
+      config.node_env === 'development' 
+        ? `Verification required. OTP: ${email} ${otp}`   
+        : "Account verification required. Please check your email for OTP."
     )
   }
 
+
+  // Successful login - single atomic update
+  const loginUpdateData: any = {
+    deviceToken: payload.deviceToken,
+    'authentication.restrictionLeftAt': null,
+    'authentication.wrongLoginAttempts': 0,
+    'authentication.latestRequestAt': new Date(),
+  }
+
+  // If user was restricted but restriction expired, reactivate account
   if (status === USER_STATUS.RESTRICTED) {
-    if (restrictionLeftAt && new Date() < restrictionLeftAt) {
-      const remainingMinutes = Math.ceil(
-        (restrictionLeftAt.getTime() - Date.now()) / 60000,
-      )
-      throw new ApiError(
-        StatusCodes.TOO_MANY_REQUESTS,
-        `You are restricted to login for ${remainingMinutes} minutes`,
-      )
-    }
-
-    // Handle restriction expiration
-    await User.findByIdAndUpdate(isUserExist._id, {
-      $set: {
-        authentication: { restrictionLeftAt: null, wrongLoginAttempts: 0 },
-        status: USER_STATUS.ACTIVE,
-      },
-    })
+    loginUpdateData.status = USER_STATUS.ACTIVE
   }
 
-
-    await User.findByIdAndUpdate(isUserExist._id, {
-      $set: {
-        status: isUserExist.status,
-        authentication: {
-          restrictionLeftAt: isUserExist.authentication.restrictionLeftAt,
-          wrongLoginAttempts: isUserExist.authentication.wrongLoginAttempts,
-        },
-      },
-    })
-
-    throw new ApiError(
-      StatusCodes.BAD_REQUEST,
-      'Incorrect password, please try again.',
-    )
-  }
-
+  // Single database update for successful login
   await User.findByIdAndUpdate(
     isUserExist._id,
-    {
-      $set: {
-        deviceToken: payload.deviceToken,
-        authentication: {
-          restrictionLeftAt: null,
-          wrongLoginAttempts: 0,
-        },
-      },
-    },
-    { new: true },
+    { $set: loginUpdateData },
+    { new: true }
   )
 
+  // Generate tokens
   const tokens = AuthHelper.createToken(isUserExist._id, isUserExist.role, fullName, isUserExist.email)
 
-  return authResponse(StatusCodes.OK, `Welcome back ${ fullName }`, isUserExist.role, tokens.accessToken, tokens.refreshToken)
+  // Log successful login for audit purposes
+  console.log(`Successful login: User ${isUserExist._id} (${email}) at ${new Date().toISOString()}`)
+
+  return authResponse(StatusCodes.OK, `Welcome back ${fullName}`, isUserExist.role, tokens.accessToken, tokens.refreshToken)
 }
 
 export const AuthCommonServices = {

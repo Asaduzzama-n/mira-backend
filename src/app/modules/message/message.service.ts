@@ -7,6 +7,8 @@ import { IPaginationOptions } from "../../../interfaces/pagination";
 import { paginationHelper } from "../../../helpers/paginationHelper";
 import { IGenericResponse } from "../../../interfaces/response";
 import { IUser } from "../user/user.interface";
+import ApiError from "../../../errors/ApiError";
+import { StatusCodes } from "http-status-codes";
 
 const sendMessageToRandomUserOptimized = async (
   user: JwtPayload, 
@@ -18,7 +20,7 @@ const sendMessageToRandomUserOptimized = async (
     const result = await User.aggregate([
       { 
         $match: { 
-          authId: { $ne: user.authId },
+          _id: { $ne: user.authId },
           status:USER_STATUS.ACTIVE
         } 
       },
@@ -36,7 +38,6 @@ const sendMessageToRandomUserOptimized = async (
 
     const randomUser = result[0];
     
-   console.log(randomUser)
 
     const message = await Message.create({
       ...payload,
@@ -56,7 +57,10 @@ const getMyMessages = async (user: JwtPayload, pagination: IPaginationOptions) =
   
   const [messages, total] = await Promise.all([
     Message.find({
-      receiver: user.authId,
+      $or: [
+        { receiver: user.authId },
+        { sender: user.authId },
+      ],
     }).populate<{sender:Partial<IUser>}>({
       path:'sender',
       select:'firstName lastName profile'
@@ -143,9 +147,30 @@ const getFeedMessages = async (user: JwtPayload, pagination: IPaginationOptions)
   };
 }
 
+const shareMessage = async (user: JwtPayload, messageId: string) => {
+  const message = await Message.findById(messageId);
+  if (!message) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'The message you are trying to share does not exist.');
+
+  }
+  if (message.deletedBy.length > 0) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'The message you are trying to share has been deleted.');
+  }
+  if (message.isShared) {
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'The message you are trying to share is already shared.');
+  }
+  if(message.receiver.toString() !== user.authId.toString()){
+    throw new ApiError(StatusCodes.FORBIDDEN, 'You are not authorized to share this message.');
+  }
+  message.isShared = true;
+  await message.save();
+  return `Message shared successfully.`;
+}
+
 export const MessageServices = {
   sendMessageToRandomUserOptimized,
   getMyMessages,
   getMessageByUserId,
   getFeedMessages,
+  shareMessage
 }

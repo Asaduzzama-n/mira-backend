@@ -32,4 +32,14 @@ router.get(
   ),
   MessageController.getFeedMessages
 )
+
+router.post(
+  '/share/:messageId',
+  auth(
+    USER_ROLES.USER
+  ),
+  validateRequest(MessageValidations.share),
+  MessageController.shareMessage
+)
+
 export const MessageRoutes = router;

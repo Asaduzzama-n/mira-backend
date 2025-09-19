@@ -14,21 +14,21 @@ const createComment = async (user: JwtPayload, payload: Partial<IComment>) => {
   payload.user = user.authId;
 
   const session = await mongoose.startSession();
-  session.startTransaction();
-
   try {
-    const [createdComment, message] = await Promise.all([
-      Comment.create([payload], { session }),
-      Message.findByIdAndUpdate(
-        payload.message,
-        { $inc: { commentCount: 1 } },
-        { session, new: true } // ensure we get updated message back
-      ),
-    ]);
+    session.startTransaction();
+
+    // Create comment and update message within the same transaction
+    const createdComment = await Comment.create([payload], { session });
+    const message = await Message.findByIdAndUpdate(
+      payload.message,
+      { $inc: { commentCount: 1 } },
+      { session, new: true }
+    );
 
     await session.commitTransaction();
 
-    // notification payload
+
+    // Build notification payload
     const notificationData = {
       from: {
         authId: user.authId.toString(),
@@ -39,7 +39,7 @@ const createComment = async (user: JwtPayload, payload: Partial<IComment>) => {
       body: createdComment[0].content,
     };
 
-    // build notification promises
+    // Send notifications outside the transaction
     const notificationPromises = [];
 
     if (message?.sender) {
@@ -69,14 +69,16 @@ const createComment = async (user: JwtPayload, payload: Partial<IComment>) => {
     return `Comment created successfully.`;
   } catch (error) {
     await session.abortTransaction();
+    console.error(error);
     throw new ApiError(
       StatusCodes.BAD_REQUEST,
       "Failed to create comment, please try again later."
     );
   } finally {
-    session.endSession();
+    session.endSession(); // only call endSession once
   }
 };
+
 
 const removeComment = async(user:JwtPayload,commentId:Types.ObjectId)=>{
   const session = await mongoose.startSession();
@@ -115,7 +117,13 @@ const getCommentByMessage = async(messageId:Types.ObjectId, pagination:IPaginati
     }).populate({
       path:'user',
       select:'firstName lastName profile'
-    }).sort({
+    }).populate({
+      path:'reactions',
+      select:'firstName lastName profile'
+
+  
+    })
+    .sort({
       [sortBy]:sortOrder
     }).skip(skip).limit(limit).lean()
   ]);
@@ -123,7 +131,7 @@ const getCommentByMessage = async(messageId:Types.ObjectId, pagination:IPaginati
     meta:{
       page,
       limit,
-      total:comments.length,
+      total:total,
       totalPage:Math.ceil(total/limit)
     },
     data:comments

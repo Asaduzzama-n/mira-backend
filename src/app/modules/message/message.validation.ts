@@ -9,5 +9,12 @@ export const MessageValidations = {
     })
   }).refine((data)=>data.body.message.length>5,{
     message:'Message must be at least 5 characters'
+  }),
+  share:z.object({
+    params:z.object({
+      messageId:z.string({
+        required_error:'Message id is required'
+      })
+    })
   })
 };

@@ -49,10 +49,7 @@ const resetPasswordZodSchema = z.object({
 const loginZodSchema = z.object({
   body: z.object({
     userName: z
-      .string()
-      .refine(value => !value || /^\S+@\S+\.\S+$/.test(value), {
-        message: 'Invalid email format',
-      }),
+      .string({ required_error: 'User name is required' }),
     phone: z
       .string()
       .optional()
@@ -133,20 +130,18 @@ const deleteAccount = z.object({
 
 const createUserZodSchema = z.object({
   body: z.object({
-    email: z.string({ required_error: 'Email is required' }).email(),
+  email: z.string({ required_error: 'Email is required' }).email(),
     password: z.string({ required_error: 'Password is required' }).min(6),
-    name: z.string({ required_error: 'Name is required' }).optional(),
-    phone: z.string({ required_error: 'Phone is required' }).optional(),
-    address: z.string().optional(),
+    userName: z.string({ required_error: 'User Name is required' }),
+    firstName: z.string({ required_error: 'First Name is required' }),
+    lastName: z.string({ required_error: 'Last Name is required' }),
+    category: z.enum(['Lifelong Learner / Student', 'Working Professional', 'Parent / Caregiver', 'Partnered / Navigating Relationships', 'Independent / Navigating Life', 'In Transition / Redefining Myself']),
     role: z.enum(
       [
-        USER_ROLES.ADMIN,
         USER_ROLES.USER,
-        USER_ROLES.GUEST,
-        USER_ROLES.CUSTOMER,
       ],
       {
-        message: 'Role must be one of admin, user, guest',
+        message: 'Role must be user',
       },
     ),
   }),

@@ -43,8 +43,21 @@ const getFeedMessages = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const shareMessage = catchAsync(async (req: Request, res: Response) => {
+  const user = req.user;
+  const { messageId } = req.params;
+  const result = await MessageServices.shareMessage(user!, messageId);
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: 'Message shared successfully',
+    data: result,
+  });
+});
+
 export const MessageController = {
   sendMessageToRandomUserOptimized,
   getMyMessages,
-  getFeedMessages
+  getFeedMessages,
+  shareMessage,
 };

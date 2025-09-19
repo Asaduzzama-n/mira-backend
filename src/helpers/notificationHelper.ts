@@ -2,7 +2,7 @@ import { Types } from 'mongoose'
 import { Notification } from '../app/modules/notifications/notifications.model'
 import { logger } from '../shared/logger'
 import { socket } from '../utils/socket'
-import { sendPushNotification } from './pushnotificationHelper'
+// import { sendPushNotification } from './pushnotificationHelper'
 
 export const sendNotification = async (
   from: {
@@ -45,9 +45,9 @@ export const sendNotification = async (
 
     socket.emit('notification', socketResponse)
 
-    if(deviceToken){
-     await sendPushNotification(deviceToken, title, body, { from: from.authId, to })
-    }
+    // if(deviceToken){
+    //  await sendPushNotification(deviceToken, title, body, { from: from.authId, to })
+    // }
   } catch (err) {
     //@ts-ignore
     logger.error(err, 'FROM NOTIFICATION HELPER')

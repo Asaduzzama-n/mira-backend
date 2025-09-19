@@ -25,7 +25,7 @@ router.patch(
 )
 
 router.get(
-  '/check-username-availability',
+  '/check-username-availability/:userName',
   validateRequest(UserValidations.checkUserNameZodSchema),
   UserController.checkAndGetUserNameAvailablity,
 )
