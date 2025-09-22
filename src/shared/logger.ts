@@ -31,7 +31,7 @@ createLogDirs() // Ensure directories exist
 // Success logger
 const logger = createLogger({
   level: 'info',
-  format: combine(label({ label: 'EXPRESS-CRAFT 🚀' }), timestamp(), myFormat),
+  format: combine(label({ label: 'MIRA-BACKEND 🚀' }), timestamp(), myFormat),
   transports: [
     new transports.Console(),
     new DailyRotateFile({

@@ -13,6 +13,13 @@ export const ReactionValidations = {
     }),
   }),
   getReactionListByMessage: z.object({
-    messageId: z.string(),
+    params: z.object({
+      messageId: z.string({
+        required_error: 'Message id is required'
+      }).refine(
+        (data) => mongoose.Types.ObjectId.isValid(data),
+        { message: 'Message id is invalid' }
+      ) 
+    }),
   }),
 };

@@ -9,6 +9,7 @@ import { commentSearchableFields } from './comment.constants';
 import mongoose, { Types } from 'mongoose';
 import { Message } from '../message/message.model';
 import { sendNotification } from '../../../helpers/notificationHelper';
+import { emitEvent } from '../../../helpers/socketInstances';
 
 const createComment = async (user: JwtPayload, payload: Partial<IComment>) => {
   payload.user = user.authId;
@@ -24,6 +25,9 @@ const createComment = async (user: JwtPayload, payload: Partial<IComment>) => {
       { $inc: { commentCount: 1 } },
       { session, new: true }
     );
+    if (!message) {
+      throw new ApiError(StatusCodes.NOT_FOUND, "Message not found.");
+    }
 
     await session.commitTransaction();
 
@@ -66,6 +70,25 @@ const createComment = async (user: JwtPayload, payload: Partial<IComment>) => {
 
     await Promise.all(notificationPromises);
 
+    const {user:userId, ...restData} = createdComment[0].toObject();
+    const newCommnetWithPopulatedData = {
+      ...restData,
+      user: {
+        _id: userId,
+        firstName: user.name.split(' ')[0],
+        lastName: user.name.split(' ')[1],
+        profile: user.profile?.toString(),      },
+    }
+
+
+    emitEvent('messageFeedUpdate',{
+      message:message?._id.toString(),
+      type:'comment:create',
+      data:newCommnetWithPopulatedData,
+    }, message?._id.toString())
+
+    
+
     return `Comment created successfully.`;
   } catch (error) {
     await session.abortTransaction();
@@ -93,12 +116,24 @@ const removeComment = async(user:JwtPayload,commentId:Types.ObjectId)=>{
       throw new ApiError(StatusCodes.FORBIDDEN,"You are not authorized to remove this comment.");
     }
 
+    emitEvent('messageFeedUpdate',{
+      message:comment.message?.toString(),
+      type:'comment:remove',
+      data:comment.toObject(),
+    }, comment.message?.toString())
+
+
     await Message.findByIdAndUpdate(comment.message,{
       $inc:{
         commentCount:-1
       }
     },{session})
     await session.commitTransaction();
+
+
+
+
+
     return `Comment removed successfully.`;
   } catch (error) {
     await session.abortTransaction();
@@ -148,10 +183,23 @@ const reactForComment = async(commentId:Types.ObjectId, user:JwtPayload)=>{
     //remove the user id from the array and save
     comment.reactions = comment.reactions.filter(id=>id.toString() !== user.authId.toString());
     await comment.save();
+    
+    emitEvent('messageFeedUpdate',{
+      comment:comment?.toString(),
+      type:'comment:reaction:remove',
+      data:comment.toObject(),
+    }, comment.message?.toString())
+
   }else{
     //add the user id to the array and save
     comment.reactions.push(user.authId);
     await comment.save();
+
+     emitEvent('messageFeedUpdate',{
+      comment:comment?.toString(),
+      type:'comment:reaction:create',
+      data:comment.toObject(),
+    }, comment.message?.toString())
 
     //send notification
       const notificationData = {
@@ -164,7 +212,7 @@ const reactForComment = async(commentId:Types.ObjectId, user:JwtPayload)=>{
       title: `${user.name} reacted on your comment.`,
       body: `${user.name} reacted on your comment.`,
     };
-
+    
     await sendNotification(notificationData.from, notificationData.to, notificationData.title, notificationData.body);
   }
   return `Comment reacted successfully.`;

@@ -1,14 +1,12 @@
 import { StatusCodes } from 'http-status-codes';
 import ApiError from '../../../errors/ApiError';
-import {  IReaction } from './reaction.interface';
 import { Reaction } from './reaction.model';
 import { JwtPayload } from 'jsonwebtoken';
-import { IPaginationOptions } from '../../../interfaces/pagination';
-import { paginationHelper } from '../../../helpers/paginationHelper';
-import { reactionSearchableFields } from './reaction.constants';
+
 import mongoose, { Types } from 'mongoose';
 import { Message } from '../message/message.model';
 import { sendNotification } from '../../../helpers/notificationHelper';
+import { emitEvent } from '../../../helpers/socketInstances';
 
 const toggleReaction = async (
  user:JwtPayload,
@@ -33,6 +31,13 @@ const toggleReaction = async (
           }
         },{session})
       ])
+
+      emitEvent('messageFeedUpdate',{
+      message:messageId.toString(),
+      type:'reaction:remove',
+      data:deletedReaction,
+    }, messageId.toString())
+
       message = updatedMessage;
     }else{
       const [createdReaction,updatedMessage] = await Promise.all([
@@ -48,10 +53,18 @@ const toggleReaction = async (
       ])
       message = updatedMessage;
       sendNotificaiton = true;
+
+
+      
+      emitEvent('messageFeedUpdate',{
+        message:messageId.toString(),
+        type:'reaction:create',
+        data:createdReaction,
+      }, messageId.toString())
+
     }
     await session.commitTransaction();
 
-   
 
     //notification
     if(sendNotificaiton){

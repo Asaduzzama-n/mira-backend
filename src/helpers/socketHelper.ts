@@ -42,9 +42,22 @@ const socket = (io: Server) => {
 
 // Separate function to register all event handlers
 const registerEventHandlers = (socket: SocketWithUser) => {
+  const userRooms = new Set<string>();
+  socket.on('joinMessageRoom', (messageId: string) => {
+    socket.join(messageId)
+    userRooms.add(messageId);
+    logger.info(`Socket ${socket.id} joined room ${messageId}`);
+  })
+
+   socket.on("leaveMessageRoom", (messageId) => {
+    socket.leave(messageId);
+    logger.info(`Socket ${socket.id} left room ${messageId}`);
+  });
 
   // Disconnect handler
   socket.on('disconnect', () => {
+        // Cleanup all rooms for this user
+    userRooms.forEach(room => socket.leave(room));
     onlineUsers.delete(socket.id)
     logger.info(
       colors.red(`User ${socket.user?.authId || 'Unknown'} disconnected ⚡`),

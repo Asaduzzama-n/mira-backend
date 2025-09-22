@@ -9,6 +9,8 @@ import { IGenericResponse } from "../../../interfaces/response";
 import { IUser } from "../user/user.interface";
 import ApiError from "../../../errors/ApiError";
 import { StatusCodes } from "http-status-codes";
+import { sendNotification } from "../../../helpers/notificationHelper";
+import { emitEvent } from "../../../helpers/socketInstances";
 
 const sendMessageToRandomUserOptimized = async (
   user: JwtPayload, 
@@ -43,8 +45,26 @@ const sendMessageToRandomUserOptimized = async (
       ...payload,
       receiver: randomUser._id,
     })
-    return `Message sent successfully.`;
+    
+    //send notification to the receiver
+    await sendNotification({
+      authId: user._id,
+      name:user.name,
+      profile:user.profile,
+    },randomUser._id, `${user.name} sent you a message`, `${message.message}`);
 
+    const populatedMessage = await Message.findById(message._id).populate({
+      path:'sender',
+      select:'firstName lastName profile'
+    }).populate({
+      path:'receiver',
+      select:'firstName lastName profile'
+    }).lean()
+
+
+    emitEvent(`message:${randomUser._id}`, populatedMessage);
+    
+    return `Message sent successfully.`;
   } catch (error) {
     console.error('Error sending optimized message to random user:', error);
     return { success: false, error: 'Failed to send message' };
@@ -153,7 +173,7 @@ const shareMessage = async (user: JwtPayload, messageId: string) => {
     throw new ApiError(StatusCodes.NOT_FOUND, 'The message you are trying to share does not exist.');
 
   }
-  if (message.deletedBy.length > 0) {
+  if (!message.deletedBy.includes(message.sender)) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'The message you are trying to share has been deleted.');
   }
   if (message.isShared) {
