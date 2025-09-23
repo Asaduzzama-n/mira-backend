@@ -9,6 +9,7 @@ import { ReactionRoutes } from '../app/modules/reaction/reaction.route'
 import { CommentRoutes } from '../app/modules/comment/comment.route'
 import { ReportRoutes } from '../app/modules/report/report.route'
 import { SupportRoutes } from '../app/modules/support/support.route'
+import { DashboardRoutes } from '../app/modules/dashboard/dashboard.route'
 
 
 const router = express.Router()
@@ -19,6 +20,7 @@ const apiRoutes: { path: string; route: Router }[] = [
 
 
   { path: '/notifications', route: NotificationRoutes },
+  { path: '/dashboard', route: DashboardRoutes },
 
   { path: '/public', route: PublicRoutes },
   { path: '/message', route: MessageRoutes },

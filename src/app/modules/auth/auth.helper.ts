@@ -11,7 +11,7 @@ const createToken = (authId: Types.ObjectId, role: string, name?: string, email?
     config.jwt.jwt_expire_in as string,
   )
   const refreshToken = jwtHelper.createToken(
-    { authId, role, name, email, deviceToken },
+    { authId, role, name, email, profile, deviceToken },
     config.jwt.jwt_refresh_secret as Secret,
     config.jwt.jwt_refresh_expire_in as string,
   )

@@ -15,6 +15,9 @@ const transporter = nodemailer.createTransport({
 
 const sendEmail = async (values: ISendEmail) => {
   try {
+    if (config.node_env === 'development') {
+      return
+    }
     const info = await transporter.sendMail({
       from: `"Express-Craft" ${config.email.from}`,
       to: values.to,

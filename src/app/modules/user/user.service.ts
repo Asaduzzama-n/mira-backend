@@ -11,6 +11,7 @@ import { IPaginationOptions } from '../../../interfaces/pagination'
 import { paginationHelper } from '../../../helpers/paginationHelper'
 import { userSearchableFields } from './user.constants'
 import { IGenericResponse } from '../../../interfaces/response'
+import config from '../../../config'
 
 
 
@@ -33,9 +34,10 @@ const updateProfile = async (user: JwtPayload, payload: Partial<IUser>) => {
 
 const createAdmin = async (): Promise<Partial<IUser> | null> => {
   const admin = {
-    email: 'hcf@gmail.com',
-    name: 'Andrea',
-    password: '12345678',
+    email: config.admin_email,
+    firstName: 'MIRA',
+    lastName: 'MIRA',
+    password: config.admin_password,
     role: USER_ROLES.ADMIN,
     status: USER_STATUS.ACTIVE,
     verified: true,

@@ -16,7 +16,7 @@ router.post(
 )
 router.post(
   '/admin-login',
-  validateRequest(AuthValidations.loginZodSchema),
+  validateRequest(AuthValidations.adminLoginZodSchema),
   CustomAuthController.adminLogin,
 )
 router.post(

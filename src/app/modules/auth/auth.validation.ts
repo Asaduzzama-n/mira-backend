@@ -61,6 +61,15 @@ const loginZodSchema = z.object({
   }),
 })
 
+const adminLoginZodSchema = z.object({
+  body: z.object({
+    email: z
+      .string({ required_error: 'Email is required' })
+      .email({ message: 'Invalid email format' }),
+    password: z.string().min(6, { message: 'Password is required' }),
+  }),
+})
+
 const verifyAccountZodSchema = z.object({
   body: z.object({
     email: z
@@ -164,5 +173,6 @@ export const AuthValidations = {
   changePasswordZodSchema,
   createUserZodSchema,
   deleteAccount,
-  socialLoginZodSchema
+  socialLoginZodSchema,
+  adminLoginZodSchema
 }
