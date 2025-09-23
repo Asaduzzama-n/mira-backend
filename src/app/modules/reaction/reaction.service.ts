@@ -35,16 +35,16 @@ const toggleReaction = async (
       emitEvent('messageFeedUpdate',{
       message:messageId.toString(),
       type:'reaction:remove',
-      data:deletedReaction,
+      data:existingReaction.toObject(),
     }, messageId.toString())
 
       message = updatedMessage;
     }else{
       const [createdReaction,updatedMessage] = await Promise.all([
-        await Reaction.create({
+        await Reaction.create([{
           message: messageId,
           user: user.authId,
-        },{session}),
+        }],{session}),
         await Message.findByIdAndUpdate(messageId,{
           $inc:{
             reactionCount:1
@@ -53,13 +53,10 @@ const toggleReaction = async (
       ])
       message = updatedMessage;
       sendNotificaiton = true;
-
-
-      
       emitEvent('messageFeedUpdate',{
         message:messageId.toString(),
         type:'reaction:create',
-        data:createdReaction,
+        data:createdReaction[0],
       }, messageId.toString())
 
     }

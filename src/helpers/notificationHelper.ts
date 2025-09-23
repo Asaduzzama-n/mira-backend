@@ -1,7 +1,7 @@
 import { Types } from 'mongoose'
 import { Notification } from '../app/modules/notifications/notifications.model'
 import { logger } from '../shared/logger'
-import { socket } from '../utils/socket'
+import { getSocketIO } from './socketInstances'
 // import { sendPushNotification } from './pushnotificationHelper'
 
 export const sendNotification = async (
@@ -17,7 +17,7 @@ export const sendNotification = async (
 ) => {
   try {
     const result = await Notification.create({
-      from,
+      from: from.authId,
       to,
       title,
       body,
@@ -43,7 +43,12 @@ export const sendNotification = async (
     }
 
 
-    socket.emit('notification', socketResponse)
+    const socketIO = getSocketIO()
+    if (socketIO) {
+      socketIO.emit(`notification::${to}`, socketResponse)
+    } else {
+      logger.warn('Socket.IO not initialized - Skipping notification emit')
+    }
 
     // if(deviceToken){
     //  await sendPushNotification(deviceToken, title, body, { from: from.authId, to })

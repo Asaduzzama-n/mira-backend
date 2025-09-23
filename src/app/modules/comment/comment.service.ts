@@ -37,7 +37,7 @@ const createComment = async (user: JwtPayload, payload: Partial<IComment>) => {
       from: {
         authId: user.authId.toString(),
         name: user.name,
-        profilePhoto: user.profile?.toString(),
+        profile: user.profile?.toString(),
       },
       title: `${user.name} commented on your message`,
       body: createdComment[0].content,
@@ -183,9 +183,9 @@ const reactForComment = async(commentId:Types.ObjectId, user:JwtPayload)=>{
     //remove the user id from the array and save
     comment.reactions = comment.reactions.filter(id=>id.toString() !== user.authId.toString());
     await comment.save();
-    
+
     emitEvent('messageFeedUpdate',{
-      comment:comment?.toString(),
+      comment:comment?._id?.toString(),
       type:'comment:reaction:remove',
       data:comment.toObject(),
     }, comment.message?.toString())
@@ -196,7 +196,7 @@ const reactForComment = async(commentId:Types.ObjectId, user:JwtPayload)=>{
     await comment.save();
 
      emitEvent('messageFeedUpdate',{
-      comment:comment?.toString(),
+      comment:comment?._id?.toString(),
       type:'comment:reaction:create',
       data:comment.toObject(),
     }, comment.message?.toString())
@@ -206,7 +206,7 @@ const reactForComment = async(commentId:Types.ObjectId, user:JwtPayload)=>{
       from: {
         authId: user.authId.toString(),
         name: user.name,
-        profilePhoto: user.profile?.toString(),
+        profile: user.profile?.toString(),
       },
       to: comment.user.toString(),
       title: `${user.name} reacted on your comment.`,

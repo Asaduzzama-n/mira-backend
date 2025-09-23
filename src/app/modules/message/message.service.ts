@@ -173,9 +173,9 @@ const shareMessage = async (user: JwtPayload, messageId: string) => {
     throw new ApiError(StatusCodes.NOT_FOUND, 'The message you are trying to share does not exist.');
 
   }
-  if (!message.deletedBy.includes(message.sender)) {
-    throw new ApiError(StatusCodes.NOT_FOUND, 'The message you are trying to share has been deleted.');
-  }
+  // if (!message.deletedBy.includes(message.sender)) {
+  //   throw new ApiError(StatusCodes.NOT_FOUND, 'The message you are trying to share has been deleted.');
+  // }
   if (message.isShared) {
     throw new ApiError(StatusCodes.BAD_REQUEST, 'The message you are trying to share is already shared.');
   }

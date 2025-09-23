@@ -70,7 +70,7 @@ const createUser = async (payload: IUser) => {
   }
   emailHelper.sendEmail(createAccount)
 
- return `${config.node_env === 'development' ? `${user.userName}, ${otp}` : "An otp has been sent to your email, please check."}`;
+ return `${config.node_env === 'development' ? `${user.email}, ${otp}` : "An otp has been sent to your email, please check."}`;
 
 }
 

@@ -15,7 +15,6 @@ const createReport = async (user: JwtPayload, payload: IReport) => {
   payload.reporter = user.authId;
   const report = await Report.create({
     ...payload,
-    reportedUser: user.authId,
   });
   return 'Thank you for reporting. We will review your report and take appropriate action.';
 };

@@ -25,6 +25,12 @@ export const emitEvent = (
     }
   
     try {
+      // Double check socketIO is still available before emitting
+      if (!socketIO) {
+        console.warn(`Socket.IO became null during emit - Skipping event: ${event}`);
+        return false;
+      }
+      
       if (room) {
         socketIO.to(room).emit(event, data);
       } else {
