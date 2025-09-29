@@ -139,6 +139,18 @@ const socialLogin = catchAsync(async (req: Request, res: Response) => {
     data: {accessToken, refreshToken, role},
   })
 })
+
+const toggleUserStatus = catchAsync(async (req: Request, res: Response) => {
+  const user = req.user
+  const {userId} = req.params
+  const result = await CustomAuthServices.toggleUserStatus(user!, userId)
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: result,
+    data:null
+  })
+})
 export const CustomAuthController = {
   forgetPassword,
   resetPassword,
@@ -150,5 +162,6 @@ export const CustomAuthController = {
   createUser,
   deleteAccount,
   adminLogin,
-  socialLogin
+  socialLogin,
+  toggleUserStatus,
 }

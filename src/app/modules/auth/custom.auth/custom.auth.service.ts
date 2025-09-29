@@ -15,6 +15,7 @@ import { jwtHelper } from '../../../../helpers/jwtHelper'
 import { JwtPayload } from 'jsonwebtoken'
 import { IUser } from '../../user/user.interface'
 import { emailHelper } from '../../../../helpers/emailHelper'
+import { Types } from 'mongoose'
 
 
 
@@ -588,6 +589,32 @@ const changePassword = async (
   return { message: 'Password changed successfully' }
 }
 
+const toggleUserStatus = async (user: JwtPayload, userId: string) => {
+
+  const isUserExist = await User.findById(new Types.ObjectId(userId))
+  if (!isUserExist) {
+    throw new ApiError(
+      StatusCodes.BAD_REQUEST,
+      'Failed to update user status. Please try again.',
+    )
+  }
+
+  if (isUserExist.status === USER_STATUS.DELETED) {
+    throw new ApiError(
+      StatusCodes.BAD_REQUEST,
+      'Requested user is already deleted.',
+    )
+  }
+
+  const updatedUser = await User.findByIdAndUpdate(isUserExist._id, {
+    $set: { status: isUserExist.status === USER_STATUS.ACTIVE ? USER_STATUS.RESTRICTED : USER_STATUS.ACTIVE },
+  })
+
+  return `User status updated to ${isUserExist.status === USER_STATUS.ACTIVE ? USER_STATUS.RESTRICTED : USER_STATUS.ACTIVE} successfully.`
+
+  
+}
+
 export const CustomAuthServices = {
   adminLogin,
   forgetPassword,
@@ -601,4 +628,5 @@ export const CustomAuthServices = {
   resendOtp,
   changePassword,
   createUser,
+  toggleUserStatus,
 }

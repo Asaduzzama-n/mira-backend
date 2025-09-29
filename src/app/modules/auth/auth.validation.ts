@@ -163,6 +163,12 @@ const socialLoginZodSchema = z.object({
   }),
 })
 
+const toggleUserStatusZodSchema = z.object({
+  params: z.object({
+    userId: z.string({ required_error: 'User ID is required' }),
+  }),
+})
+
 export const AuthValidations = {
   verifyEmailOrPhoneOtpZodSchema,
   forgetPasswordZodSchema,
@@ -174,5 +180,6 @@ export const AuthValidations = {
   createUserZodSchema,
   deleteAccount,
   socialLoginZodSchema,
-  adminLoginZodSchema
+  adminLoginZodSchema,
+  toggleUserStatusZodSchema,
 }

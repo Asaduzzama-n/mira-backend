@@ -87,5 +87,6 @@ router.delete(
 router.post('/refresh-token', CustomAuthController.getRefreshToken)
 
 router.post('/social-login', validateRequest(AuthValidations.socialLoginZodSchema), CustomAuthController.socialLogin)
+router.patch('/toggle-user-status/:userId', auth(USER_ROLES.ADMIN), validateRequest(AuthValidations.toggleUserStatusZodSchema), CustomAuthController.toggleUserStatus)
 
 export const AuthRoutes = router
