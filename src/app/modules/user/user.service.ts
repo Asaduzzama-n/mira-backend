@@ -82,10 +82,11 @@ const getProfile = async(user:JwtPayload)=>{
 }
 
 
-const getAllUsers =async(user:JwtPayload, pagination:IPaginationOptions, filter:IUserFilterableFields):Promise<IGenericResponse<IUser[]>>=>{
-  const {searchTerm, ...filterData}=filter;
+const getAllUsers =async(user:JwtPayload, pagination:IPaginationOptions, filters:IUserFilterableFields):Promise<IGenericResponse<IUser[]>>=>{
+  const {searchTerm, ...filterData}=filters;
   const {page, limit,skip, sortBy, sortOrder}=paginationHelper.calculatePagination(pagination);
   const andConditions=[];
+
   if(searchTerm){
     andConditions.push({
       $or:userSearchableFields.map(field=>({
@@ -97,6 +98,7 @@ const getAllUsers =async(user:JwtPayload, pagination:IPaginationOptions, filter:
     })
   }
 
+
   if(Object.keys(filterData).length){
     andConditions.push({
       $and:Object.entries(filterData).map(([field,value])=>({
@@ -104,7 +106,7 @@ const getAllUsers =async(user:JwtPayload, pagination:IPaginationOptions, filter:
       }))
     })
   }
-
+  
   const whereConditions= andConditions.length>0?{
     $and:andConditions
   }:{}

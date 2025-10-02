@@ -28,6 +28,7 @@ router.patch(
   '/status/:id',
   auth(
     USER_ROLES.USER,
+    USER_ROLES.ADMIN,
   ),
   validateRequest(ReportValidations.updateStatus),
   ReportController.updateReportStatus
