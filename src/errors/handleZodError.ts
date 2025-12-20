@@ -6,6 +6,12 @@ import {
 
 const handleZodError = (error: ZodError): IGenericErrorResponse => {
   const errors: IGenericErrorMessage[] = error.issues.map((issue: ZodIssue) => {
+    if (issue?.code === 'invalid_type') {
+      return {
+        path: issue?.path[issue.path.length - 1],
+        message: `${issue?.path[issue.path.length - 1]} must be a ${issue?.expected}`,
+      }
+    }
     return {
       path: issue?.path[issue.path.length - 1],
       message: issue?.message,

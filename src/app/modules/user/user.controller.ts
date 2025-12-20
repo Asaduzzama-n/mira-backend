@@ -8,8 +8,7 @@ import { UserServices } from './user.service'
 import pick from '../../../shared/pick'
 import { userFilterableFields } from './user.constants'
 import { paginationFields } from '../../../interfaces/pagination'
-
-
+import { IUser } from './user.interface'
 
 const updateProfile = catchAsync(async (req: Request, res: Response) => {
   const { images, ...userData } = req.body
@@ -17,7 +16,7 @@ const updateProfile = catchAsync(async (req: Request, res: Response) => {
   images?.length > 0 && (userData.profile = images[0])
 
   const result = await UserServices.updateProfile(req.user!, userData)
-  sendResponse<String>(res, {
+  sendResponse<IUser>(res, {
     statusCode: StatusCodes.OK,
     success: true,
     message: 'Profile updated successfully',
@@ -25,17 +24,18 @@ const updateProfile = catchAsync(async (req: Request, res: Response) => {
   })
 })
 
-
-const checkAndGetUserNameAvailablity = catchAsync(async (req: Request, res: Response) => {
-  const { userName } = req.params
-  const result = await UserServices.checkAndGetUserNameAvailablity(userName)
-  sendResponse(res, {
-    statusCode: StatusCodes.OK,
-    success: true,
-    message: 'User Name checked successfully',
-    data: result,
-  })
-})
+const checkAndGetUserNameAvailablity = catchAsync(
+  async (req: Request, res: Response) => {
+    const { userName } = req.params
+    const result = await UserServices.checkAndGetUserNameAvailablity(userName)
+    sendResponse(res, {
+      statusCode: StatusCodes.OK,
+      success: true,
+      message: 'User Name checked successfully',
+      data: result,
+    })
+  },
+)
 
 const getProfile = catchAsync(async (req: Request, res: Response) => {
   const result = await UserServices.getProfile(req.user!)
@@ -47,11 +47,11 @@ const getProfile = catchAsync(async (req: Request, res: Response) => {
   })
 })
 
-const getAllUsers =catchAsync(async (req: Request, res: Response) => {
-  const filters = pick(req.query,userFilterableFields)
-  const pagination = pick(req.query,paginationFields)
+const getAllUsers = catchAsync(async (req: Request, res: Response) => {
+  const filters = pick(req.query, userFilterableFields)
+  const pagination = pick(req.query, paginationFields)
 
-  const result = await UserServices.getAllUsers(req.user!,pagination,filters) 
+  const result = await UserServices.getAllUsers(req.user!, pagination, filters)
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     success: true,
@@ -64,5 +64,5 @@ export const UserController = {
   checkAndGetUserNameAvailablity,
   updateProfile,
   getProfile,
-  getAllUsers
+  getAllUsers,
 }

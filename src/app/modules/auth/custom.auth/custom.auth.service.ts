@@ -69,6 +69,7 @@ const createUser = async (payload: IUser) => {
   if(!user){
     throw new ApiError(StatusCodes.BAD_REQUEST, 'Failed to create user.')
   }
+
   emailHelper.sendEmail(createAccount)
 
  return `${config.node_env === 'development' ? `${user.email}, ${otp}` : "An otp has been sent to your email, please check."}`;

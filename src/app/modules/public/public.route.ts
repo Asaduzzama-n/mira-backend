@@ -9,12 +9,13 @@ const router = express.Router()
 
 router.post(
   '/',
+  auth(USER_ROLES.ADMIN),
   validateRequest(PublicValidation.create),
   PublicController.createPublic,
 )
 router.get('/:type', PublicController.getAllPublics)
 
-router.delete('/:id', PublicController.deletePublic)
+router.delete('/:id', auth(USER_ROLES.ADMIN), PublicController.deletePublic)
 router.post(
   '/contact',
   validateRequest(PublicValidation.contactZodSchema),
