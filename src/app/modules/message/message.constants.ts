@@ -1,5 +1,5 @@
 // Filterable fields for Message
-export const messageFilterables = [];
+export const messageFilterables = ['isInbox'];
 
 // Searchable fields for Message
 export const messageSearchableFields = [];
@@ -12,3 +12,4 @@ export const isSetEqual = (setA: Set<string>, setB: Set<string>): boolean => {
   }
   return true;
 };
+
