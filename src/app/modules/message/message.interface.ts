@@ -16,5 +16,5 @@ export interface IMessage {
 export type MessageModel = Model<IMessage, {}, {}>
 
 export type IMessageFilterables = {
-  isInbox: boolean
+  isInbox?: boolean
 }
